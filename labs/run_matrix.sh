@@ -71,6 +71,12 @@ start_all() {
   docker run -d --name fjlab-18024 --network host -v "$PWD":/lab -w /lab \
     $IMG sh -c "java $JVM -jar fastjson-1.2.83-fatjar.jar 18024 parse" >/dev/null
   echo "  18024  fastjson 1.2.83  mode=parse (Spring Boot FatJar)"
+  # 18029: 1.2.84 修复版（CVE-2026-16723 官方修复，预期不可利用）
+  python3 build_fatjar.py 1.2.84
+  docker rm -f fjlab-18029 >/dev/null 2>&1 || true
+  docker run -d --name fjlab-18029 --network host -v "$PWD":/lab -w /lab \
+    $IMG sh -c "java -jar fastjson-1.2.84-fatjar.jar 18029 parse" >/dev/null
+  echo "  18029  fastjson 1.2.84  mode=parse (修复版 Sanity)"
   sleep 3
   echo "就绪检查:"
   for p in $(seq 18001 18020); do

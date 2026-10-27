@@ -95,6 +95,19 @@ python3 fastjson_exploit.py ldap --lport 1389 --lhost <本机IP> --mode el --cmd
 python3 fastjson_exploit.py
 ```
 
+## 官方 Security Advisory 对照（CVE-2026-16723，fastjson2 wiki）
+
+参考 alibaba/fastjson2 官方通告（FearsOff 负责任披露，2026-07）核实的事实与本工具行为：
+
+| 通告要点 | 本工具状态 |
+|---|---|
+| 影响范围 1.2.68–1.2.83，默认配置（autoType/safeMode off），仅 Spring Boot fat-jar 部署 | ✅ jartype 链条件判定一致（非 fat-jar 自动探测失败并如实报告） |
+| 已验证环境 Spring Boot 2.x/3.x/4.x + JDK 8/11/17/21 | ⚠️ temurin 8u452+/8u504/17 上 SSRF/下载阶段复现；defineClass 端受 JVM 类名一致性校验限制（详见 FAQ，疑为构建差异，公开研究在 Oracle JDK 报告成功） |
+| 指定目标类（parseObject(body, Dto.class)）不是缓解措施，DTO 的 Object/Map 字段可嵌套 payload | ✅ 字段发现 + base_type_fields 扫描已覆盖 |
+| **"重复调用可能从类缓存返回黑名单类"**（1.2.84 修复项） | ✅ 已实测并固化为"缓存复用"跟进：expectClass 探测把类写入 mappings，后续单 @type 直接引用命中缓存（跳过 deny/whitelist），对剥离双 @type 的 WAF 场景有效 |
+| 1.2.84 修复：拒绝含 `:`/`/`/`!` 的类型名；白名单 hash 命中增加文本回验；accept 前缀不再覆盖危险基类 | ✅ 已建 1.2.84 靶场（18029）验证：jartype 类名在 checkAutoType 即拒、缓存技巧失效（双 @type 视作数据） |
+| 缓解：升级 1.2.84 / SafeMode / noneautotype / 非 fat-jar | ✅ safeMode 与 noneautotype 语义已在版本矩阵区分 |
+
 ## 与 GitHub 主流工具的能力对照 / Roadmap
 
 对标 JNDI-Inject-Exploit、java-chains(web-chains)、JYso(JNDIExploit+ysoserial)、
@@ -234,6 +247,7 @@ cd labs && ./build.sh          # 下载 fastjson 14 个版本 + dbcp/c3p0/tomcat
 | 1.2.47 + commons-collections 3.2.1（--chain yso） | ✅ | cache1247 触发 + LDAP javaSerializedData CC6（uid 回传确认） |
 | 1.2.68 + postgresql 42.2.25（--chain postgres） | ✅ | expectClass + PgConnection 构造器连接（假 PG 反连确认） |
 | 1.2.31 + h2 1.4.200（--chain h2, ds 模式） | ✅ | JdbcDataSource + INIT=RUNSCRIPT 自建 HTTP（CREATE ALIAS RCE 回传确认） |
+| 1.2.84 修复版 FatJar（18029） | ✅ 正确放弃 | URL 特殊字符类名在 checkAutoType 即拒（官方修复生效） |
 | 1.2.83 Spring Boot FatJar（--chain jartype） | ⚠️ | @JSONType 链：远程 JAR 下载（SSRF）实测确认；defineClass 受 JVM 类名校验拦截 |
 | 批量 3 目标并发 | ✅ | 独立端口，无冲突 |
 
