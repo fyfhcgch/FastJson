@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# 运行产物
+logs/
+
+# 靶场依赖（build.sh 会自动下载）
+labs/libs/*.jar
+
+# 编译产物
+labs/build/
+labs/*.jar
+
+# 本地实验残留
+labs/executed*.txt
+labs/jt*.txt
+labs/bftest
+*.class
