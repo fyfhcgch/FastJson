@@ -81,6 +81,7 @@ public class FastjsonLab {
             exchange.sendResponseHeaders(200, ob.length);
             try (OutputStream os = exchange.getResponseBody()) { os.write(ob); }
         });
+        s.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
         s.start();
         System.out.println("Lab mode=" + mode + " port=" + port
                 + " autoType=" + Boolean.getBoolean("fastjson.parser.autoTypeSupport"));
