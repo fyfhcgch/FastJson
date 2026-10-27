@@ -44,6 +44,20 @@ start_all() {
   start 1.2.24 safe  18019
   start 1.2.68 safe  18020
   start 1.2.62 bean  18021
+  # 18026-18028: 新链靶场（yso 序列化 / PostgreSQL JDBC / H2 INIT）
+  CP_CC="$CP:libs/commons-collections-3.2.1.jar"
+  docker rm -f fjlab-18026 >/dev/null 2>&1 || true
+  docker run -d --name fjlab-18026 --network host -v "$PWD":/lab -w /lab \
+    $IMG sh -c "java $JVM -cp \"${CP_CC/VERSION/1.2.47}\" FastjsonLab 18026 parse" >/dev/null
+  echo "  18026  fastjson 1.2.47  mode=parse +commons-collections-3.2.1 (yso)"
+  docker rm -f fjlab-18027 >/dev/null 2>&1 || true
+  docker run -d --name fjlab-18027 --network host -v "$PWD":/lab -w /lab \
+    $IMG sh -c "java -cp \"${CP/VERSION/1.2.68}:libs/postgresql-42.2.25.jar\" FastjsonLab 18027 ds" >/dev/null
+  echo "  18027  fastjson 1.2.68  mode=ds +postgresql-42.2.25 (pg jdbc)"
+  docker rm -f fjlab-18028 >/dev/null 2>&1 || true
+  docker run -d --name fjlab-18028 --network host -v "$PWD":/lab -w /lab \
+    $IMG sh -c "java -Dfastjson.parser.autoTypeSupport=true -cp \"${CP/VERSION/1.2.31}:libs/h2-1.4.200.jar\" FastjsonLab 18028 ds" >/dev/null
+  echo "  18028  fastjson 1.2.31  mode=ds +h2-1.4.200 (h2 init)"
   # 18022: 1.2.47 wrap 二段式（--param 测试），单独启动
   # 18023: 1.2.68 + mysql-connector（MySQL JDBC 组合链）
   CP_MYSQL="$CP:libs/mysql-connector-java-8.0.19.jar"

@@ -43,6 +43,20 @@ public class FastjsonLab {
                     Object inner = outer.get("json");
                     Object o = JSON.parse(String.valueOf(inner));
                     out = "OK " + o;
+                } else if (mode.equals("ds")) {
+                    // 动态 DataSource 场景：应用接受用户提交的数据源配置并调用
+                    // getConnection（真实世界常见模式），用于 PG/H2 JDBC 链复现
+                    Object o = JSON.parse(json);
+                    if (o instanceof javax.sql.DataSource) {
+                        try {
+                            ((javax.sql.DataSource) o).getConnection();
+                            out = "OK connected";
+                        } catch (Throwable t) {
+                            out = "ERR " + t;
+                        }
+                    } else {
+                        out = "OK " + o;
+                    }
                 } else if (mode.equals("safe")) {
                     Object o;
                     try {

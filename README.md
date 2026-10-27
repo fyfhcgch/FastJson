@@ -104,22 +104,28 @@ MySQL_Fake_Server、c0ny1/FastjsonExploit 等项目后的差距分析：
 BCEL/TemplatesImpl 本地链、expectClass（根级+字段）、1.2.47 缓存绕过、MySQL JDBC
 文件读取、@JSONType jar:http 探测、批量扫描、无 dnslog 自带回传、注入点/请求定制。
 
-**未覆盖面**（按实战价值排序，欢迎 PR）：
-1. **高版本 JDK 的 LDAP 序列化 gadget**：LDAP 直接下发 ysoserial 序列化数据
-   （CC/CB/JRMPClient 等），命中目标 classpath 依赖即绕过远程类加载限制——
-   本工具 LDAP 仅支持远程类加载与 BeanFactory（MySQL_Fake_Server 的 yso_ 前缀同样未实现）
-2. **回显与内存马**：Tomcat/Spring 命令回显、Filter/Servlet/Listener/Agent 内存马注入
+**本轮已补齐（v1.2.1）**：
+1. ✅ **LDAP 原生反序列化 gadget**：`--chain yso`——LDAP javaSerializedData 下发
+   ysoserial payload（CC6 等，本地 java 经 ysoserial-all.jar 生成或 --yso-file 提供），
+   命令经 bash 花括号展开包装修复 exec(String) 分词问题；靶场 18026（1.2.47+CC3.2.1）实测 RCE
+2. ✅ **PostgreSQL JDBC 链**：`--chain postgres`——expectClass + `org.postgresql.jdbc.PgConnection`
+   （构造器即连接，DataSource 系类在 1.2.66+ 被 deny 而仅 PgConnection 可过），内置假 PG
+   服务端反连判定；靶场 18027 实测。loggerFile 文件写入依赖 pgjdbc 版本（42.2.25 实测不写）
+3. ✅ **H2 数据库链**：`--chain h2`——JdbcDataSource + `INIT=RUNSCRIPT FROM 自建 HTTP`
+   （INIT 值内分号会破坏 h2 URL 解析，脚本经 HTTP 下发规避），CREATE ALIAS RCE；
+   靶场 18028（1.2.31+h2+ds 模式）实测回传。注意 org.h2.jdbcx.JdbcDataSource 在 1.2.66+ 被 deny
+
+**仍未覆盖**（按实战价值排序，欢迎 PR）：
+1. **回显与内存马**：Tomcat/Spring 命令回显、Filter/Servlet/Listener/Agent 内存马注入
    （JNDI-Inject-Exploit / java-chains 核心能力）——本工具仅有 callback 外带回传
-3. **本地反序列化 gadget 自动探测**：java-object-searcher 式 classpath gadget 发现
-4. **更多 JDBC 驱动攻击链**：PostgreSQL JDBC（expectClass + loggerFile/SocketFactory）、
-   H2（INIT RUNSCRIPT）、Derby 等——本工具仅 MySQL
-5. **expectClass 进阶姿势**：groovy 类加载 RCE、commons-io IO 链写文件、ASCII jar 覆盖、
+2. **本地反序列化 gadget 自动探测**：java-object-searcher 式 classpath gadget 发现
+3. **expectClass 进阶姿势**：groovy 类加载 RCE、commons-io IO 链写文件、ASCII jar 覆盖、
    WebSphere 本地 factory、1.2.66/1.2.67 的 Shiro JndiObjectFactory/ignite gadget
-6. **JRMP 反连利用**：yso JRMPClient + JRMPListener 组合
-7. **Dnslog 平台集成**（ceye/dnslog.cn OOB）——本工具用自建回传（比赛更强），缺第三方平台适配
-8. **Fastjson2（QVD-2026-45876，≤2.0.62）**：FNV-1a 哈希碰撞类名绕过——独立解析器，
+4. **JRMP 反连利用**：yso JRMPClient + JRMPListener 组合
+5. **Dnslog 平台集成**（ceye/dnslog.cn OOB）——本工具用自建回传（比赛更强），缺第三方平台适配
+6. **Fastjson2（QVD-2026-45876，≤2.0.62）**：FNV-1a 哈希碰撞类名绕过——独立解析器，
    需单独实现指纹探测与碰撞类名生成
-9. **WAF/RASP 对抗**：JYso 的高版本 JNDI/RASP 绕过姿势、更多编码变形
+7. **WAF/RASP 对抗**：JYso 的高版本 JNDI/RASP 绕过姿势、更多编码变形
 
 ## CVE 覆盖对照（alibaba/fastjson 1.x 全部 5 个 CVE）
 
@@ -225,6 +231,9 @@ cd labs && ./build.sh          # 下载 fastjson 14 个版本 + dbcp/c3p0/tomcat
 | 1.2.68 safe | ❌ 预期 | SafeMode 拦截 |
 | 1.2.47 二段式 wrap（--param json） | ✅ | jndi（注入点包装生效） |
 | 1.2.68 + mysql-connector 8.0.19（--chain mysql） | ✅ | LoadBalancedMySQLConnection + LOCAL INFILE 文件读取（/etc/hostname 回传确认） |
+| 1.2.47 + commons-collections 3.2.1（--chain yso） | ✅ | cache1247 触发 + LDAP javaSerializedData CC6（uid 回传确认） |
+| 1.2.68 + postgresql 42.2.25（--chain postgres） | ✅ | expectClass + PgConnection 构造器连接（假 PG 反连确认） |
+| 1.2.31 + h2 1.4.200（--chain h2, ds 模式） | ✅ | JdbcDataSource + INIT=RUNSCRIPT 自建 HTTP（CREATE ALIAS RCE 回传确认） |
 | 1.2.83 Spring Boot FatJar（--chain jartype） | ⚠️ | @JSONType 链：远程 JAR 下载（SSRF）实测确认；defineClass 受 JVM 类名校验拦截 |
 | 批量 3 目标并发 | ✅ | 独立端口，无冲突 |
 

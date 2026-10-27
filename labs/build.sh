@@ -18,6 +18,14 @@ done
 # c3p0（JNDI 备选载体测试）
 [ -f libs/c3p0-0.9.5.4.jar ] || curl -sfL -o libs/c3p0-0.9.5.4.jar $MV/com/mchange/c3p0/0.9.5.4/c3p0-0.9.5.4.jar
 [ -f libs/mchange-commons-java-0.2.19.jar ] || curl -sfL -o libs/mchange-commons-java-0.2.19.jar $MV/com/mchange/mchange-commons-java/0.2.19/mchange-commons-java-0.2.19.jar
+[ -f libs/tomcat-embed-core-8.5.0.jar ] || curl -sfL -o libs/tomcat-embed-core-8.5.0.jar $MV/org/apache/tomcat/embed/tomcat-embed-core/8.5.0/tomcat-embed-core-8.5.0.jar
+[ -f libs/tomcat-embed-el-8.5.0.jar ] || curl -sfL -o libs/tomcat-embed-el-8.5.0.jar $MV/org/apache/tomcat/embed/tomcat-embed-el/8.5.0/tomcat-embed-el-8.5.0.jar
+[ -f libs/xbean-reflect-4.20.jar ] || curl -sfL -o libs/xbean-reflect-4.20.jar $MV/org/apache/xbean/xbean-reflect/4.20/xbean-reflect-4.20.jar
+[ -f libs/commons-collections-3.2.1.jar ] || curl -sfL -o libs/commons-collections-3.2.1.jar $MV/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar
+[ -f libs/postgresql-42.2.25.jar ] || curl -sfL -o libs/postgresql-42.2.25.jar $MV/org/postgresql/postgresql/42.2.25/postgresql-42.2.25.jar
+[ -f libs/h2-1.4.200.jar ] || curl -sfL -o libs/h2-1.4.200.jar $MV/com/h2database/h2/1.4.200/h2-1.4.200.jar
+[ -f libs/mysql-connector-java-8.0.19.jar ] || curl -sfL -o libs/mysql-connector-java-8.0.19.jar $MV/mysql/mysql-connector-java/8.0.19/mysql-connector-java-8.0.19.jar
+[ -f libs/ysoserial-all.jar ] || curl -sfL -o libs/ysoserial-all.jar https://github.com/frohoff/ysoserial/releases/download/v0.0.6/ysoserial-all.jar
 
 # Tomcat BeanFactory + EL（LDAP el 模式测试）
 [ -f libs/tomcat-embed-core-8.5.100.jar ] || curl -sfL -o libs/tomcat-embed-core-8.5.100.jar $MV/org/apache/tomcat/embed/tomcat-embed-core/8.5.100/tomcat-embed-core-8.5.100.jar
