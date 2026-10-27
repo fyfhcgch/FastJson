@@ -131,6 +131,42 @@ python3 fastjson_exploit.py
 | 1.2.84 修复：拒绝含 `:`/`/`/`!` 的类型名；白名单 hash 命中增加文本回验；accept 前缀不再覆盖危险基类 | ✅ 已建 1.2.84 靶场（18029）验证：jartype 类名在 checkAutoType 即拒、缓存技巧失效（双 @type 视作数据） |
 | 缓解：升级 1.2.84 / SafeMode / noneautotype / 非 fat-jar | ✅ safeMode 与 noneautotype 语义已在版本矩阵区分 |
 
+## TODO（未覆盖技术清单，按优先级）
+
+> 对照 FastJsonParty（lemono0）与 su18/hack-fastjson-1.2.80 的缺口，按实战价值排序。
+
+- [ ] **P0｜≤1.2.68 写文件链（不出网场景核心）**
+  - [ ] JDK11 无依赖链：`MarshalOutputStream + InflaterOutputStream + FileOutputStream`
+        （1.2.57-1.2.68 + JDK11，内容需 Deflater 压缩，limit 按报错校准）
+  - [ ] commons-io 2.0-2.6：`ReaderInputStream + WriterOutputStream +
+        FileWriterWithEncoding + TeeInputStream + XmlStreamReader`（数据需填充至 8192）
+  - [ ] commons-io 2.7-2.8：同上（CharSequenceReader 带 start/end 参数变体）
+  - [ ] aspectjtools + kryo：`SafeFileOutputStream(targetPath, tempPath) +
+        kryo.io.Output(buffer, position) + SerialOutput`
+  - [ ] 写文件落地动作参数化：计划任务 / SSH authorized_keys / JSP 木马（非 Spring）/
+        jar 包启动加载
+- [ ] **P0｜C3P0 二次反序列化（≤1.2.47 不出网通杀）**
+  - [ ] 纯 Python 构造 fastjson 原生反序列化序列化流：
+        `TemplatesImpl + JSONArray + BadAttributeValueExpException + HashMap`
+        （可复用 server.py 的 ResourceRef 手工序列化框架）
+  - [ ] 载体：`WrapperConnectionPoolDataSource.userOverridesAsString =
+        "HexAsciiSerializedMap:<hex>;"`
+  - [ ] 依赖：c3p0 0.9.5.4（CC 可选，fastjson 原生链无需 CC）
+- [ ] **P0｜1.2.76-1.2.80 Groovy ASTTransformation 两段远程类加载**
+  - [ ] 两段 payload：`Exception + CompilationFailedException(unit={})`（缓存）→
+        `ProcessingUnit + JavaStubCompilationUnit + CompilerConfiguration.classpathList=http://`
+  - [ ] 恶意 JAR 需含 `META-INF/services/org.codehaus.groovy.transform.ASTTransformation`
+        （groovy 3.0.9，类不得带 package）
+- [ ] P1｜≤1.2.68 读文件盲注/DNS 外带（commons-io `BOMInputStream + URLReader`，
+      BOM 字节逐位猜解；依赖 nashorn）
+- [ ] P1｜MySQL JDBC 5.x（`com.mysql.jdbc.JDBC4Connection`，5.1.11-5.1.48）与
+      6.x（`connectionString` 形态）载体，对接假 MySQL 的 yso_ 反序列化
+- [ ] P1｜1.2.73-1.2.80 Aspectj 读文件回显（`SourceTypeCollisionException` 三段缓存 +
+      `BasicCompilationUnit.fileName` + Character 报错）
+- [ ] P2｜1.2.36-1.2.62 regex ReDoS（黑盒版本探测辅助）
+- [ ] P2｜WAF 字符填充变体（超大字段填充）
+- [ ] P2｜deps 探测增强：适配掩码 message 的目标（响应长度/状态码差分）
+
 ## 与 GitHub 主流工具的能力对照 / Roadmap
 
 对标 JNDI-Inject-Exploit、java-chains(web-chains)、JYso(JNDIExploit+ysoserial)、
